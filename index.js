@@ -4,12 +4,12 @@ const app = express()
 // cors add korte hobe 
 const cors = require('cors');
 
-// const admin = require("firebase-admin");
+const admin = require("firebase-admin");
 // .env use kortechi tai nahole db pass pabe na
 require('dotenv').config()
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const { json } = require('express');
+// const { JSON } = require('express');
 
 const port = process.env.PORT || 5000;
 
@@ -18,11 +18,12 @@ const port = process.env.PORT || 5000;
 
 // const serviceAccount = require('./doctor-portal-client-844f5-firebase-adminsdk-5xj3b-91c9837684.json')
 // const serviceAccount = process.env.FIREVASE_SERVICE_SCCOUNT;
+const serviceAccount = JSON.parse(process.env.FIREVASE_SERVICE_SCCOUNT);
 
-// console.log(serviceAccount)
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount)
-// });
+console.log(serviceAccount)
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 
 // cors ke middleware hisabe use korar jonno
@@ -37,20 +38,20 @@ console.log(uri)
 
 
 // jwt token
-// async function verifyToken(req, res, next) {
-//     if (req.headers?.authorization?.startsWith('Bearer ')) {
-//         const token = req.headers.authorization.split(' ')[1];
+async function verifyToken(req, res, next) {
+    if (req.headers?.authorization?.startsWith('Bearer ')) {
+        const token = req.headers.authorization.split(' ')[1];
 
-//         try {
-//             const decodedUser = await admin.auth().verifyIdToken(token);
-//             req.decodedEmail = decodedUser.email;
-//         }
-//         catch {
+        try {
+            const decodedUser = await admin.auth().verifyIdToken(token);
+            req.decodedEmail = decodedUser.email;
+        }
+        catch {
 
-//         }
-//     }
-//     next();
-// }
+        }
+    }
+    next();
+}
 
 async function run() {
     try {
@@ -75,7 +76,7 @@ async function run() {
             // res.json({ message: 'hello' });
         })
         // verifyToken,
-        app.get('/appointments', async (req, res) => {
+        app.get('/appointments', verifyToken, async (req, res) => {
             const email = req.query.email;
             const date = new Date(req.query.date).toLocaleDateString();
             console.log(email)
@@ -116,7 +117,7 @@ async function run() {
             }
         })
         // verifyToken,
-        app.put('/userInfo/admin', async (req, res) => {
+        app.put('/userInfo/admin', verifyToken, async (req, res) => {
             try {
                 const users = req.body;
 
